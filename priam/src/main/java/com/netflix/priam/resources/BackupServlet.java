@@ -77,7 +77,7 @@ public class BackupServlet
     private static final String REST_HEADER_RANGE = "daterange";
     private static final String REST_HEADER_FILTER = "filter";
     private static final String REST_HEADER_TOKEN = "token";
-    private static final String REST_HEADER_REGION = "region";
+    private static final String REST_HEADER_DC = "dc";
     private static final String REST_KEYSPACES = "keyspaces";
     private static final String REST_RESTORE_PREFIX = "restoreprefix";
     private static final String FMT = "yyyyMMddHHmm";
@@ -141,7 +141,7 @@ public class BackupServlet
 
     @GET
     @Path("/restore")
-    public Response restore(@QueryParam(REST_HEADER_RANGE) String daterange, @QueryParam(REST_HEADER_REGION) String region, @QueryParam(REST_HEADER_TOKEN) String token,
+    public Response restore(@QueryParam(REST_HEADER_RANGE) String daterange, @QueryParam(REST_HEADER_DC) String dc, @QueryParam(REST_HEADER_TOKEN) String token,
             @QueryParam(REST_KEYSPACES) String keyspaces, @QueryParam(REST_RESTORE_PREFIX) String restorePrefix) throws Exception
     {
         Date startTime;
@@ -166,10 +166,10 @@ public class BackupServlet
             config.setRestorePrefix(restorePrefix);
         }
         
-        logger.info("Parameters: { token: [" + token + "], region: [" +  region + "], startTime: [" + startTime + "], endTime: [" + endTime + 
+        logger.info("Parameters: { token: [" + token + "], dc: [" +  dc + "], startTime: [" + startTime + "], endTime: [" + endTime +
                     "], keyspaces: [" + keyspaces + "], restorePrefix: [" + restorePrefix + "]}");
         
-        restore(token, region, startTime, endTime, keyspaces);
+        restore(token, dc, startTime, endTime, keyspaces);
         
         //Since this call is probably never called in parallel, config is multi-thread safe to be edited
         if (origRestorePrefix != null)
@@ -256,7 +256,7 @@ public class BackupServlet
 	@Path("/life_of_crow")
 	public Response restore_verify_key(
 			@QueryParam(REST_HEADER_RANGE) String daterange,
-			@QueryParam(REST_HEADER_REGION) String region,
+			@QueryParam(REST_HEADER_DC) String dc,
 			@QueryParam(REST_HEADER_TOKEN) String token,
 			@QueryParam(REST_KEYSPACES) String keyspaces,
 			@QueryParam(REST_RESTORE_PREFIX) String restorePrefix,
@@ -291,7 +291,7 @@ public class BackupServlet
 		}
 
 		
-		restore(token, region, startTime, endTime, keyspaces);
+		restore(token, dc, startTime, endTime, keyspaces);
 
 		// Since this call is probably never called in parallel, config is
 		// multi-thread safe to be edited
@@ -324,8 +324,8 @@ public class BackupServlet
      * 
      * @param token
      *            Overrides the current token with this one, if specified
-     * @param region
-     *            Override the region for searching backup
+     * @param dc
+     *            Override the dc for searching backup
      * @param startTime
      *            Start time
      * @param endTime
@@ -334,7 +334,7 @@ public class BackupServlet
      *            Comma seperated list of keyspaces to restore
      * @throws Exception
      */
-    private void restore(String token, String region, Date startTime, Date endTime, String keyspaces) throws Exception
+    private void restore(String token, String dc, Date startTime, Date endTime, String keyspaces) throws Exception
     {
         String origRegion = config.getDC();
         String origToken = priamServer.getId().getInstance().getToken();
@@ -344,11 +344,11 @@ public class BackupServlet
         if( config.isRestoreClosestToken())
             priamServer.getId().getInstance().setToken(closestToken(priamServer.getId().getInstance().getToken(), config.getDC()));
         
-        if (StringUtils.isNotBlank(region))
+        if (StringUtils.isNotBlank(dc))
         {
-            config.setDC(region);
-            logger.info("Restoring from region " + region);
-            priamServer.getId().getInstance().setToken(closestToken(priamServer.getId().getInstance().getToken(), region));
+            config.setDC(dc);
+            logger.info("Restoring from dc " + dc);
+            priamServer.getId().getInstance().setToken(closestToken(priamServer.getId().getInstance().getToken(), dc));
             logger.info("Restore will use token " + priamServer.getId().getInstance().getToken());
         }
 
@@ -368,15 +368,15 @@ public class BackupServlet
     }
 
     /**
-     * Find closest token in the specified region
+     * Find closest token in the specified dc
      */
-    private String closestToken(String token, String region)
+    private String closestToken(String token, String dc)
     {
         List<PriamInstance> plist = factory.getAllIds(config.getAppName());
         List<BigInteger> tokenList = Lists.newArrayList();
         for (PriamInstance ins : plist)
         {
-            if (ins.getDC().equalsIgnoreCase(region))
+            if (ins.getDC().equalsIgnoreCase(dc))
                 tokenList.add(new BigInteger(ins.getToken()));
         }
         return tokenManager.findClosestToken(new BigInteger(token), tokenList).toString();
@@ -410,7 +410,9 @@ public class BackupServlet
 				backupJSON.put("bucket", config.getBackupPrefix());
 				backupJSON.put("filename", p.getRemotePath());
 				backupJSON.put("app", p.getClusterName());
-				backupJSON.put("region", p.getRegion());
+                // TODO: probably should deprecate region
+				backupJSON.put("region", p.getDC());
+                backupJSON.put("dc", p.getDC());
 				backupJSON.put("token", p.getToken());
 				backupJSON.put("ts", new DateTime(p.getTime()).toString(FMT));
 				backupJSON.put("instance_id", p.getInstanceIdentity()

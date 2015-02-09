@@ -20,7 +20,7 @@ public class StreamingTest
 {
     public void teststream() throws IOException, InterruptedException
     {
-        IConfiguration config = new FakeConfiguration("test", "cass_upg107_ccs", "test", "ins_id");
+        IConfiguration config = new FakeConfiguration("test", "_suffix", "cass_upg107_ccs", "test", "ins_id");
     }
 
     @Test
