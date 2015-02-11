@@ -29,5 +29,5 @@ public interface ITokenManager
 
     BigInteger findClosestToken(BigInteger tokenToSearch, List<BigInteger> tokenList);
 
-    int dcOffset(String dc);
+    int regionOffset(String dc);
 }

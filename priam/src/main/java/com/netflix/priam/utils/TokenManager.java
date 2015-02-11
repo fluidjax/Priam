@@ -59,20 +59,20 @@ public class TokenManager implements ITokenManager
      *            -- Rac count is the numeber of RAC's
      * @param rac_size
      *            -- number of memberships in the rac
-     * @param dc
-     *            -- name of the DC where it this token is created.
+     * @param region
+     *            -- name of the region where it this token is created.
      */
     @Override
-    public String createToken(int my_slot, int rac_count, int rac_size, String dc)
+    public String createToken(int my_slot, int rac_count, int rac_size, String region)
     {
         int regionCount = rac_count * rac_size;
-        return initialToken(regionCount, my_slot, dcOffset(dc)).toString();
+        return initialToken(regionCount, my_slot, regionOffset(region)).toString();
     }
     
     @Override
-    public String createToken(int my_slot, int totalCount, String dc)
+    public String createToken(int my_slot, int totalCount, String region)
     {
-        return initialToken(totalCount, my_slot, dcOffset(dc)).toString();
+        return initialToken(totalCount, my_slot, regionOffset(region)).toString();
     }
     
     @Override
@@ -96,8 +96,8 @@ public class TokenManager implements ITokenManager
      * Create an offset to add to token values by hashing the region name.
      */
     @Override
-    public int dcOffset(String dc)
+    public int regionOffset(String region)
     {
-        return Math.abs(dc.hashCode());
+        return Math.abs(region.hashCode());
     }
 }

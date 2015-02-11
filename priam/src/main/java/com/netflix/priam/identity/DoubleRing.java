@@ -65,7 +65,7 @@ public class DoubleRing
         for (PriamInstance data : local)
             factory.delete(data);
 
-        int hash = tokenManager.dcOffset(config.getDC());
+        int hash = tokenManager.regionOffset(config.getDC());
         // move existing slots.
         for (PriamInstance data : local)
         {
@@ -79,7 +79,7 @@ public class DoubleRing
             // if max then rotate.
             int currentSlot = data.getId() - hash;
             int new_slot = currentSlot + 3 > new_ring_size ? (currentSlot + 3) - new_ring_size : currentSlot + 3;
-            String token = tokenManager.createToken(new_slot, new_ring_size, config.getDC());
+            String token = tokenManager.createToken(new_slot, new_ring_size, config.getRegion());
             factory.create(data.getApp(), new_slot + hash, InstanceIdentity.DUMMY_INSTANCE_ID, config.getHostname(), config.getHostIP(), data.getRac(), null, token);
         }
     }

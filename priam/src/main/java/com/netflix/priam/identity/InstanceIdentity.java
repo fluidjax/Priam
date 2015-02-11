@@ -329,7 +329,7 @@ public class InstanceIdentity
         	logger.info("Generating my own and new token");
             // Sleep random interval - upto 15 sec
             sleeper.sleep(new Random().nextInt(15000));
-            int hash = tokenManager.dcOffset(config.getDC());
+            int hash = tokenManager.regionOffset(config.getRegion());
             // use this hash so that the nodes are spred far away from the other
             // regions.
 
@@ -347,7 +347,7 @@ public class InstanceIdentity
 
             logger.info(String.format("Trying to createToken with slot %d with rac count %d with rac membership size %d with dc %s",
                     my_slot, membership.getRacCount(), membership.getRacMembershipSize(), config.getDC()));
-            String payload = tokenManager.createToken(my_slot, membership.getRacCount(), membership.getRacMembershipSize(), config.getDC());
+            String payload = tokenManager.createToken(my_slot, membership.getRacCount(), membership.getRacMembershipSize(), config.getRegion());
             return factory.create(config.getAppName(), my_slot + hash, config.getInstanceName(), config.getHostname(), config.getHostIP(), config.getRac(), null, payload);
         }
 
